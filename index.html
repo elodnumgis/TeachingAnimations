@@ -1,0 +1,889 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Shape function explorer: Q4 and Q9 elements</title>
+<script src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=STIX+Two+Text:ital,wght@0,400;1,400;1,600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#e9eef2; --panel:#f8fafb; --ink:#14213d; --muted:#5b6678; --line:#c9d3dc;
+  --fill:#dde5ec; --sel:#c2255c; --contrib:#e67700; --shape:#0c8599; --bad:#c92a2a; --good:#2b8a3e;
+  --grid:#b8c4cf;
+  --sans:"Atkinson Hyperlegible", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --math:"STIX Two Text", "Cambria Math", "Times New Roman", serif;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0f1622; --panel:#172131; --ink:#e3e9f2; --muted:#94a1b5; --line:#2b3a50;
+    --fill:#1f2c40; --sel:#f06595; --contrib:#ffa94d; --shape:#3bc9db; --bad:#ff6b6b; --good:#69db7c;
+    --grid:#2f3f57; color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0f1622; --panel:#172131; --ink:#e3e9f2; --muted:#94a1b5; --line:#2b3a50;
+  --fill:#1f2c40; --sel:#f06595; --contrib:#ffa94d; --shape:#3bc9db; --bad:#ff6b6b; --good:#69db7c;
+  --grid:#2f3f57; color-scheme:dark;
+}
+html{scroll-padding-top:env(safe-area-inset-top,0px);height:100%}
+*,*::before,*::after{box-sizing:inherit}
+body{margin:0;min-height:100%;background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.45}
+.m{font-family:var(--math);font-style:italic}
+header{padding:18px 22px 10px;display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 18px}
+h1{font-family:var(--math);font-weight:400;font-size:clamp(22px,3vw,30px);margin:0;letter-spacing:.005em}
+h1 i{font-weight:600}
+header p{margin:0;color:var(--muted);max-width:70ch}
+.app{display:grid;grid-template-columns:minmax(300px,360px) 1fr;gap:14px;padding:6px 14px 14px;height:calc(100vh - 80px);min-height:600px}
+aside{display:flex;flex-direction:column;gap:12px;overflow-y:auto;padding-right:2px}
+section.box{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px 14px}
+h2{font-size:14px;font-weight:700;margin:0 0 8px;color:var(--ink)}
+.seg{display:grid;grid-template-columns:1fr 1fr;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.seg button{font:inherit;border:0;background:transparent;color:var(--ink);padding:9px 6px;cursor:pointer;line-height:1.2}
+.seg button small{display:block;color:var(--muted);font-size:12px}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--panel)}
+.seg button[aria-pressed="true"] small{color:inherit;opacity:.75}
+.checks label{display:flex;align-items:center;gap:8px;padding:3px 0;cursor:pointer}
+.sw{width:22px;height:12px;border-radius:3px;flex:none}
+.sw.sum{background:linear-gradient(90deg,#3a4fb3,#5fa8d8,#f2f0e6,#ee8a3d,#b42a2a)}
+.sw.con{background:var(--contrib)}
+.sw.shp{background:transparent;border:2px solid var(--shape)}
+.sw.grd{background:repeating-linear-gradient(90deg,var(--muted) 0 1px,transparent 1px 5px)}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin:4px 0 10px}
+.chip{font:inherit;font-size:13px;border:1px solid var(--line);background:transparent;color:var(--ink);border-radius:6px;padding:3px 7px;cursor:pointer;min-width:52px;text-align:left}
+.chip b{font-family:var(--math);font-style:italic;font-weight:400}
+.chip span{color:var(--muted);font-variant-numeric:tabular-nums}
+.chip[aria-pressed="true"]{border-color:var(--sel);box-shadow:inset 0 0 0 1px var(--sel)}
+.row{display:flex;align-items:center;gap:10px}
+input[type=range]{flex:1;accent-color:var(--sel)}
+.val{font-variant-numeric:tabular-nums;min-width:48px;text-align:right}
+.btns{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.btn{font:inherit;font-size:13px;border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:6px;padding:5px 9px;cursor:pointer}
+.btn:hover{border-color:var(--muted)}
+button:focus-visible,input:focus-visible{outline:2px solid var(--sel);outline-offset:2px}
+.formula{font-family:var(--math);font-size:19px;margin:6px 0 2px;overflow-x:auto;white-space:nowrap}
+.note{color:var(--muted);font-size:13px;margin:4px 0 0}
+.status{font-size:13px;margin-top:6px}
+.status.ok{color:var(--good)} .status.badc{color:var(--bad)}
+#geo{width:100%;aspect-ratio:1/1;max-width:320px;display:block;margin:0 auto;touch-action:none;border-radius:6px;background:var(--bg)}
+.viewwrap{position:relative;background:var(--panel);border:1px solid var(--line);border-radius:10px;overflow:hidden;min-height:420px}
+#view{position:absolute;inset:0;touch-action:none;cursor:grab}
+#view canvas{display:block}
+.nlabel{position:absolute;pointer-events:none;font-family:var(--math);font-style:italic;font-size:15px;color:var(--ink);transform:translate(8px,-22px);text-shadow:0 0 3px var(--panel),0 0 3px var(--panel)}
+.nlabel.sel{color:var(--sel);font-weight:600}
+.hint{position:absolute;left:12px;bottom:10px;color:var(--muted);font-size:13px;pointer-events:none;max-width:calc(100% - 200px)}
+.switch{display:flex;align-items:center;justify-content:space-between;gap:10px;cursor:pointer;font-weight:700;font-size:14px}
+.switch input{position:absolute;opacity:0;width:1px;height:1px}
+.switch .track{width:40px;height:22px;border-radius:11px;background:var(--line);position:relative;flex:none;transition:background .15s}
+.switch .track::after{content:"";position:absolute;left:3px;top:3px;width:16px;height:16px;border-radius:50%;background:var(--panel);transition:transform .15s}
+.switch input:checked + .track{background:var(--ink)}
+.switch input:checked + .track::after{transform:translateX(18px)}
+.switch input:focus-visible + .track{outline:2px solid var(--sel);outline-offset:2px}
+#djBody{display:none;margin-top:10px}
+#djBody.on{display:block}
+.panelhead{font-size:13px;color:var(--muted);margin:10px 0 4px;text-align:center}
+.maparrow{text-align:center;font-family:var(--math);font-size:15px;color:var(--muted);margin:6px 0 0}
+#ref{width:100%;aspect-ratio:1/1;max-width:320px;display:block;margin:0 auto;touch-action:none;border-radius:6px;background:var(--bg);cursor:crosshair}
+.djbar{height:10px;border-radius:2px;background:linear-gradient(90deg,#000080 0%,#0000ff 12.5%,#00ffff 37.5%,#ffff00 62.5%,#ff0000 87.5%,#800000 100%);margin:4px 0 2px}
+.djformula{font-family:var(--math);font-size:17px;margin:8px 0 0;overflow-x:auto;white-space:nowrap}
+.readout{font-size:13px;min-height:2.9em;margin:6px 0 0;font-variant-numeric:tabular-nums}
+#legDJ{display:none;margin-top:8px}
+.legend{position:absolute;right:12px;top:12px;background:color-mix(in srgb,var(--panel) 88%,transparent);border:1px solid var(--line);border-radius:8px;padding:8px 10px;font-size:12px;pointer-events:none}
+.cbar{width:130px;height:10px;border-radius:2px;background:linear-gradient(90deg,#3a4fb3,#5fa8d8 33%,#f2f0e6 50%,#ee8a3d 67%,#b42a2a);margin:4px 0 2px}
+.cbar-l{display:flex;justify-content:space-between;color:var(--muted);font-variant-numeric:tabular-nums}
+.warn{position:absolute;left:12px;top:12px;background:var(--bad);color:#fff;border-radius:6px;padding:6px 10px;font-size:13px;display:none;max-width:60%}
+.tip{position:absolute;pointer-events:none;background:var(--ink);color:var(--panel);padding:3px 8px;border-radius:5px;font-size:13px;display:none;white-space:nowrap}
+.tip .m{font-style:italic}
+@media (max-width:0px){
+  .app{grid-template-columns:1fr;height:auto}
+  .viewwrap{order:-1;height:62vh;min-height:360px}
+  .hint{max-width:calc(100% - 24px);bottom:auto;top:auto}
+  .legend{top:auto;bottom:34px}
+}
+/* slide (add-in) layout: no header, fill the frame, smaller type */
+header{display:none}
+body{font-size:13px;height:100%;overflow:hidden}
+.app{height:100%;min-height:0;padding:8px;gap:8px;grid-template-columns:minmax(250px,300px) 1fr}
+section.box{padding:9px 11px}
+aside{gap:8px}
+.viewwrap{min-height:0}
+.formula{font-size:16px}
+@media (max-width:600px){ .app{grid-template-columns:1fr;overflow-y:auto} body{overflow:auto} .viewwrap{order:-1;height:60vh} }
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<header>
+  <h1>Shape functions on a <i>quadrilateral</i> element</h1>
+  <p>Pull a node up or down to change its nodal value <span class="m">u<sub>k</sub></span>. The orange surface is that node's contribution <span class="m">u<sub>k</sub>N<sub>k</sub></span>; the coloured surface is the interpolated field <span class="m">Σ u<sub>i</sub>N<sub>i</sub></span>.</p>
+</header>
+
+<div class="app">
+  <aside>
+    <section class="box">
+      <h2>Element</h2>
+      <div class="seg" role="group" aria-label="Element type">
+        <button id="tQ4" aria-pressed="true">Bilinear Q4<small>4 nodes</small></button>
+        <button id="tQ9" aria-pressed="false">Biquadratic Q9<small>9 nodes</small></button>
+      </div>
+    </section>
+
+    <section class="box">
+      <h2>Show</h2>
+      <div class="checks">
+        <label><input type="checkbox" id="cSum" checked><span class="sw sum"></span>Interpolated field <span class="m">&nbsp;Σ u<sub>i</sub>N<sub>i</sub></span></label>
+        <label><input type="checkbox" id="cCon" checked><span class="sw con"></span>Selected contribution <span class="m">&nbsp;u<sub>k</sub>N<sub>k</sub></span></label>
+        <label><input type="checkbox" id="cShp"><span class="sw shp"></span>Selected shape function <span class="m">&nbsp;N<sub>k</sub></span>&nbsp;(unit)</label>
+        <label><input type="checkbox" id="cGrd" checked><span class="sw grd"></span>Lines of constant <span class="m">&nbsp;ξ, η</span></label>
+      </div>
+    </section>
+
+    <section class="box">
+      <h2>Nodal values</h2>
+      <div class="chips" id="chips"></div>
+      <div class="row">
+        <label for="uSlider" class="m" id="uLab">u<sub>3</sub></label>
+        <input type="range" id="uSlider" min="-1.5" max="2" step="0.01">
+        <span class="val" id="uVal">1.00</span>
+      </div>
+      <div class="formula" id="formula"></div>
+      <p class="note" id="nodeNote"></p>
+      <div class="btns">
+        <button class="btn" id="bOne">Set all to 1</button>
+        <button class="btn" id="bZero">Set all to 0</button>
+        <button class="btn" id="bIso">Isolate selected node</button>
+        <label class="note" style="display:flex;align-items:center;gap:5px;margin:0"><input type="checkbox" id="cSnap">Snap to 0.1</label>
+      </div>
+      <p class="status ok" id="puStatus"></p>
+    </section>
+
+    <section class="box">
+      <h2>Geometry</h2>
+      <p class="panelhead" style="margin-top:0">Physical coordinates (<span class="m">x, y</span>)</p>
+      <canvas id="geo" aria-label="Element geometry. Drag nodes to distort the element."></canvas>
+      <p class="maparrow">↑ <span class="m">x</span> = Σ <span class="m">N<sub>i</sub></span>(<span class="m">ξ, η</span>) <span class="m">x<sub>i</sub></span>, &nbsp;<span class="m">y</span> = Σ <span class="m">N<sub>i</sub></span>(<span class="m">ξ, η</span>) <span class="m">y<sub>i</sub></span></p>
+      <p class="panelhead">Natural coordinates (<span class="m">ξ, η</span>): the parent element</p>
+      <canvas id="ref" aria-label="Parent element in natural coordinates"></canvas>
+      <p class="readout" id="djRead">Hover over the parent square to see where a point lands on the physical element.</p>
+      <p class="note">Drag nodes to distort the element. Red shading (grey when colouring by det <span class="m">J</span>) marks where det <span class="m">J</span> ≤ 0.</p>
+      <div class="btns">
+        <button class="btn" data-g="square">Square</button>
+        <button class="btn" data-g="trap">Trapezoid</button>
+        <button class="btn" data-g="para">Parallelogram</button>
+        <button class="btn" data-g="rand">Random</button>
+        <button class="btn" data-g="curve" id="gCurve" hidden>Curved edges</button>
+      </div>
+      <label class="note" id="straightWrap" style="display:none;align-items:center;gap:6px;margin-top:8px"><input type="checkbox" id="cStraight" checked>Keep edges straight (mid nodes follow corners)</label>
+      <p class="status ok" id="jStatus"></p>
+    </section>
+
+    <section class="box">
+      <label class="switch"><span>Colour by det <span class="m">J</span></span><input type="checkbox" id="cDJ" role="switch"><span class="track"></span></label>
+      <div id="djBody">
+        <p class="note" style="margin-top:0">Colours both geometry views and the 3D footprint by det <span class="m">J</span>. The parent square stays fixed while the colours follow the physical element.</p>
+        <div class="djbar"></div>
+        <div class="cbar-l"><span id="dj0">0</span><span id="dj1">1</span><span id="dj2">2</span></div>
+        <p class="note" style="margin-top:2px">Scale is relative to the average, det <span class="m">J</span> = <span class="m">A</span>/4. Bands are 1/12 of the scale; grey means det <span class="m">J</span> ≤ 0.</p>
+        <div class="djformula" id="djFormula"></div>
+        <p class="note" id="djNote"></p>
+      </div>
+    </section>
+  </aside>
+
+  <div class="viewwrap">
+    <div id="view" tabindex="0" aria-label="3D view of shape functions"></div>
+    <div class="warn" id="warn">det J ≤ 0 somewhere: the mapping is not invertible, so this element is invalid.</div>
+    <div class="legend">
+      <div>Field value</div>
+      <div class="cbar"></div>
+      <div class="cbar-l"><span>−1</span><span>0</span><span>1</span><span>2</span></div>
+      <div id="legDJ"><div>Footprint: det <span class="m">J</span></div><div class="djbar" style="width:130px"></div>
+      <div class="cbar-l"><span id="ldj0">0</span><span id="ldj1">1</span><span id="ldj2">2</span></div></div>
+    </div>
+    <div class="hint">Drag a node up or down. Drag empty space to rotate, scroll or pinch to zoom.</div>
+    <div class="tip" id="tip"></div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+if(window.Office && Office.onReady) Office.onReady(()=>{});
+(function(){
+const $ = s => document.querySelector(s);
+
+/* ---------- element definitions ---------- */
+const REF4 = [[-1,-1],[1,-1],[1,1],[-1,1]];
+const REF9 = [...REF4, [0,-1],[1,0],[0,1],[-1,0],[0,0]];
+const S = {
+  type:'Q4',
+  xy: REF4.map(p=>[p[0],p[1]]),
+  u: [1,1,1,1],
+  sel: 2,
+  show:{sum:true, contrib:true, shape:false, grid:true},
+  straight:true, snap:false, dj:false, hover:null
+};
+const refPts = () => S.type==='Q4' ? REF4 : REF9;
+const nn = () => S.type==='Q4' ? 4 : 9;
+
+const L  = (a,t) => a===-1 ? 0.5*t*(t-1) : a===0 ? 1-t*t : 0.5*t*(t+1);
+const dL = (a,t) => a===-1 ? t-0.5 : a===0 ? -2*t : t+0.5;
+
+function shape(type, xi, eta, N, Nx, Ne){
+  const R = type==='Q4' ? REF4 : REF9;
+  for(let i=0;i<R.length;i++){
+    const a=R[i][0], b=R[i][1];
+    if(type==='Q4'){
+      N[i]=0.25*(1+a*xi)*(1+b*eta);
+      if(Nx){ Nx[i]=0.25*a*(1+b*eta); Ne[i]=0.25*b*(1+a*xi); }
+    } else {
+      N[i]=L(a,xi)*L(b,eta);
+      if(Nx){ Nx[i]=dL(a,xi)*L(b,eta); Ne[i]=L(a,xi)*dL(b,eta); }
+    }
+  }
+}
+const tN=new Array(9), tNx=new Array(9), tNe=new Array(9);
+
+function bilinear(c, xi, eta){
+  const w=[(1-xi)*(1-eta),(1+xi)*(1-eta),(1+xi)*(1+eta),(1-xi)*(1+eta)].map(v=>v/4);
+  return [w[0]*c[0][0]+w[1]*c[1][0]+w[2]*c[2][0]+w[3]*c[3][0], w[0]*c[0][1]+w[1]*c[1][1]+w[2]*c[2][1]+w[3]*c[3][1]];
+}
+function straightenMids(){
+  if(S.type!=='Q9') return;
+  for(let i=4;i<9;i++) S.xy[i]=bilinear(S.xy, REF9[i][0], REF9[i][1]);
+}
+function detJ(xi,eta){
+  shape(S.type,xi,eta,tN,tNx,tNe);
+  let a=0,b=0,c=0,d=0;
+  for(let i=0;i<nn();i++){ a+=tNx[i]*S.xy[i][0]; b+=tNx[i]*S.xy[i][1]; c+=tNe[i]*S.xy[i][0]; d+=tNe[i]*S.xy[i][1]; }
+  return a*d-b*c;
+}
+function mapXY(xi,eta){
+  shape(S.type,xi,eta,tN);
+  let x=0,y=0; for(let i=0;i<nn();i++){ x+=tN[i]*S.xy[i][0]; y+=tN[i]*S.xy[i][1]; }
+  return [x,y];
+}
+
+/* ---------- sampling ---------- */
+const NSEG=36, NP=NSEG+1, NV=NP*NP;
+let NS=new Float32Array(NV*9);
+const XS=new Float32Array(NV), YS=new Float32Array(NV), DJ=new Float32Array(NV);
+let djMean=1, djMax=1;
+let maxPU=0, minDet=1, hasBadJ=false;
+const sid=(i,j)=>j*NP+i;
+function recomputeSamples(){
+  const n=nn(); maxPU=0;
+  for(let j=0;j<NP;j++) for(let i=0;i<NP;i++){
+    const xi=-1+2*i/NSEG, eta=-1+2*j/NSEG, s=sid(i,j);
+    shape(S.type,xi,eta,tN);
+    let x=0,y=0,sum=0;
+    for(let k=0;k<n;k++){ NS[s*9+k]=tN[k]; x+=tN[k]*S.xy[k][0]; y+=tN[k]*S.xy[k][1]; sum+=tN[k]; }
+    XS[s]=x; YS[s]=y; maxPU=Math.max(maxPU,Math.abs(sum-1));
+  }
+  minDet=Infinity;
+  for(let j=0;j<=24;j++) for(let i=0;i<=24;i++){ minDet=Math.min(minDet, detJ(-1+2*i/24, -1+2*j/24)); }
+  hasBadJ = minDet<=1e-9;
+  // area by 3x3 Gauss (exact for both Q4 and Q9 on these polynomials)
+  const gp=[-Math.sqrt(0.6),0,Math.sqrt(0.6)], gw=[5/9,8/9,5/9]; let A=0;
+  for(let a=0;a<3;a++) for(let b=0;b<3;b++) A+=gw[a]*gw[b]*detJ(gp[a],gp[b]);
+  djMean=A/4 || 1e-9; djMax=-Infinity;
+  for(let j=0;j<NP;j++) for(let i=0;i<NP;i++){ const d=detJ(-1+2*i/NSEG,-1+2*j/NSEG); DJ[sid(i,j)]=d; if(d>djMax) djMax=d; }
+}
+/* det J colour: jet over r = detJ/mean in [0,2], 12 bands; non-positive -> grey */
+const JET=[[0,[0,0,0.5]],[0.125,[0,0,1]],[0.375,[0,1,1]],[0.625,[1,1,0]],[0.875,[1,0,0]],[1,[0.5,0,0]]];
+function jet(t){
+  for(let i=1;i<JET.length;i++) if(t<=JET[i][0]){ const [t0,c0]=JET[i-1],[t1,c1]=JET[i], f=(t-t0)/(t1-t0); return c0.map((c,q)=>c+(c1[q]-c)*f); }
+  return JET[JET.length-1][1];
+}
+function djColor(d){
+  if(d<=1e-9) return [0.42,0.42,0.42];
+  let r=d/djMean; r=Math.min(2,Math.max(0,r));
+  return jet((Math.min(11,Math.floor(r/2*12))+0.5)/12);
+}
+/* drawing helpers for the 2D panels */
+function arrow(g,x0,y0,x1,y1,sz){
+  g.beginPath(); g.moveTo(x0,y0); g.lineTo(x1,y1); g.stroke();
+  const a=Math.atan2(y1-y0,x1-x0);
+  g.beginPath(); g.moveTo(x1,y1); g.lineTo(x1-sz*Math.cos(a-0.4),y1-sz*Math.sin(a-0.4)); g.lineTo(x1-sz*Math.cos(a+0.4),y1-sz*Math.sin(a+0.4)); g.closePath(); g.fill();
+}
+function htext(g,t,x,y,color,d){
+  g.lineJoin='round'; g.strokeStyle=css('--panel'); g.lineWidth=3.5*d; g.strokeText(t,x,y); g.fillStyle=color; g.fillText(t,x,y);
+}
+const rgb=c=>`rgb(${c.map(v=>Math.round(v*255)).join(',')})`;
+
+/* ---------- colour map ---------- */
+const STOPS=[[-1,[0x3a,0x4f,0xb3]],[0,[0x5f,0xa8,0xd8]],[0.5,[0xf2,0xf0,0xe6]],[1,[0xee,0x8a,0x3d]],[2,[0xb4,0x2a,0x2a]]];
+function cmap(v){
+  if(v<=STOPS[0][0]) return STOPS[0][1].map(c=>c/255);
+  for(let i=1;i<STOPS.length;i++){
+    if(v<=STOPS[i][0]){
+      const [v0,c0]=STOPS[i-1],[v1,c1]=STOPS[i], t=(v-v0)/(v1-v0);
+      return c0.map((c,k)=>(c+(c1[k]-c)*t)/255);
+    }
+  }
+  return STOPS[STOPS.length-1][1].map(c=>c/255);
+}
+const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+
+/* ---------- three.js scene ---------- */
+const view=$('#view');
+const renderer=new THREE.WebGLRenderer({antialias:true,alpha:true});
+renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,2));
+view.appendChild(renderer.domElement);
+const scene=new THREE.Scene();
+const camera=new THREE.PerspectiveCamera(36,1,0.05,100);
+camera.up.set(0,0,1);
+const orbit={theta:-1.15, phi:1.08, r:7.2, target:new THREE.Vector3(0,0,0.45)};
+function placeCam(){
+  const sp=Math.sin(orbit.phi);
+  camera.position.set(orbit.target.x+orbit.r*sp*Math.cos(orbit.theta), orbit.target.y+orbit.r*sp*Math.sin(orbit.theta), orbit.target.z+orbit.r*Math.cos(orbit.phi));
+  camera.lookAt(orbit.target);
+}
+scene.add(new THREE.AmbientLight(0xffffff,0.62));
+const dl=new THREE.DirectionalLight(0xffffff,0.55); dl.position.set(3,-4,6); scene.add(dl);
+const dl2=new THREE.DirectionalLight(0xffffff,0.25); dl2.position.set(-4,3,3); scene.add(dl2);
+
+const grid=new THREE.GridHelper(4.8,12); grid.rotation.x=Math.PI/2; grid.position.z=-0.002; scene.add(grid);
+
+// shared index
+const idx=[];
+for(let j=0;j<NSEG;j++) for(let i=0;i<NSEG;i++){
+  const a=sid(i,j),b=sid(i+1,j),c=sid(i+1,j+1),d=sid(i,j+1);
+  idx.push(a,b,c,a,c,d);
+}
+function makeSurfGeom(withColor){
+  const g=new THREE.BufferGeometry();
+  g.setAttribute('position',new THREE.BufferAttribute(new Float32Array(NV*3),3));
+  if(withColor) g.setAttribute('color',new THREE.BufferAttribute(new Float32Array(NV*3),3));
+  g.setIndex(idx); return g;
+}
+const LSTEP=6, NLINES=NSEG/LSTEP+1;
+function makeLineGeom(){
+  const g=new THREE.BufferGeometry();
+  g.setAttribute('position',new THREE.BufferAttribute(new Float32Array(2*NLINES*NSEG*2*3),3));
+  return g;
+}
+const matSum=new THREE.MeshPhongMaterial({vertexColors:true,side:THREE.DoubleSide,shininess:25,transparent:true,opacity:0.93,polygonOffset:true,polygonOffsetFactor:1,polygonOffsetUnits:1});
+const matCon=new THREE.MeshPhongMaterial({side:THREE.DoubleSide,shininess:40,transparent:true,opacity:0.55,depthWrite:false});
+const matShp=new THREE.MeshPhongMaterial({side:THREE.DoubleSide,transparent:true,opacity:0.18,depthWrite:false});
+const matSumL=new THREE.LineBasicMaterial({transparent:true,opacity:0.45});
+const matConL=new THREE.LineBasicMaterial({transparent:true,opacity:0.8});
+const matShpL=new THREE.LineBasicMaterial({transparent:true,opacity:0.9});
+
+const surf={
+  sum:{mesh:new THREE.Mesh(makeSurfGeom(true),matSum), lines:new THREE.LineSegments(makeLineGeom(),matSumL)},
+  contrib:{mesh:new THREE.Mesh(makeSurfGeom(false),matCon), lines:new THREE.LineSegments(makeLineGeom(),matConL)},
+  shape:{mesh:new THREE.Mesh(makeSurfGeom(false),matShp), lines:new THREE.LineSegments(makeLineGeom(),matShpL)}
+};
+surf.contrib.mesh.renderOrder=2; surf.shape.mesh.renderOrder=3;
+for(const k in surf){ scene.add(surf[k].mesh); scene.add(surf[k].lines); }
+
+// base footprint
+const baseMat=new THREE.MeshBasicMaterial({transparent:true,opacity:0.55,side:THREE.DoubleSide,depthWrite:false});
+const base=new THREE.Mesh(makeSurfGeom(true),baseMat); scene.add(base);
+const outlineMat=new THREE.LineBasicMaterial();
+const outline=new THREE.LineLoop(new THREE.BufferGeometry(),outlineMat);
+outline.geometry.setAttribute('position',new THREE.BufferAttribute(new Float32Array(4*NSEG*3),3));
+scene.add(outline);
+
+// nodes
+let nodes=[]; // {sphere, dot, stem, label}
+const sphGeo=new THREE.SphereGeometry(0.075,24,16), dotGeo=new THREE.SphereGeometry(0.035,12,8);
+const nodeMat=new THREE.MeshPhongMaterial({shininess:60});
+const selMat=new THREE.MeshPhongMaterial({shininess:60});
+const dotMat=new THREE.MeshBasicMaterial();
+const stemMat=new THREE.LineDashedMaterial({dashSize:0.05,gapSize:0.04,transparent:true,opacity:0.7});
+function buildNodes(){
+  nodes.forEach(n=>{scene.remove(n.sphere);scene.remove(n.dot);scene.remove(n.stem);n.stem.geometry.dispose();n.label.remove();});
+  nodes=[];
+  for(let i=0;i<nn();i++){
+    const sphere=new THREE.Mesh(sphGeo,nodeMat), dot=new THREE.Mesh(dotGeo,dotMat);
+    const sg=new THREE.BufferGeometry(); sg.setAttribute('position',new THREE.BufferAttribute(new Float32Array(6),3));
+    const stem=new THREE.Line(sg,stemMat);
+    const label=document.createElement('div'); label.className='nlabel'; label.textContent=String(i+1);
+    view.appendChild(label);
+    scene.add(sphere,dot,stem);
+    nodes.push({sphere,dot,stem,label});
+  }
+}
+
+function writeSurface(obj, valFn, colored){
+  const pos=obj.mesh.geometry.attributes.position.array;
+  const col=colored?obj.mesh.geometry.attributes.color.array:null;
+  const vals=new Float32Array(NV);
+  for(let s=0;s<NV;s++){
+    const v=valFn(s); vals[s]=v;
+    pos[3*s]=XS[s]; pos[3*s+1]=YS[s]; pos[3*s+2]=v;
+    if(col){ const c=cmap(v); col[3*s]=c[0]; col[3*s+1]=c[1]; col[3*s+2]=c[2]; }
+  }
+  obj.mesh.geometry.attributes.position.needsUpdate=true;
+  if(col) obj.mesh.geometry.attributes.color.needsUpdate=true;
+  obj.mesh.geometry.computeVertexNormals();
+  obj.mesh.geometry.computeBoundingSphere();
+  const lp=obj.lines.geometry.attributes.position.array; let p=0;
+  const put=s=>{lp[p++]=XS[s];lp[p++]=YS[s];lp[p++]=vals[s]+0.002;};
+  for(let l=0;l<NLINES;l++){
+    const c=l*LSTEP;
+    for(let t=0;t<NSEG;t++){ put(sid(t,c)); put(sid(t+1,c)); }
+    for(let t=0;t<NSEG;t++){ put(sid(c,t)); put(sid(c,t+1)); }
+  }
+  obj.lines.geometry.attributes.position.needsUpdate=true;
+  obj.lines.geometry.computeBoundingSphere();
+  return vals;
+}
+let fieldMin=0, fieldMax=0;
+function updateScene(){
+  const n=nn(), k=S.sel;
+  const sumVals=writeSurface(surf.sum, s=>{let v=0;for(let i=0;i<n;i++) v+=S.u[i]*NS[s*9+i];return v;}, true);
+  fieldMin=Infinity; fieldMax=-Infinity; for(const v of sumVals){ if(v<fieldMin) fieldMin=v; if(v>fieldMax) fieldMax=v; }
+  writeSurface(surf.contrib, s=>S.u[k]*NS[s*9+k], false);
+  writeSurface(surf.shape, s=>NS[s*9+k], false);
+  surf.sum.mesh.visible=S.show.sum; surf.sum.lines.visible=S.show.sum&&S.show.grid;
+  surf.contrib.mesh.visible=S.show.contrib; surf.contrib.lines.visible=S.show.contrib&&S.show.grid;
+  surf.shape.mesh.visible=S.show.shape; surf.shape.lines.visible=S.show.shape;
+
+  // base
+  const bp=base.geometry.attributes.position.array;
+  for(let s=0;s<NV;s++){ bp[3*s]=XS[s]; bp[3*s+1]=YS[s]; bp[3*s+2]=0; }
+  const bc=base.geometry.attributes.color.array;
+  for(let s=0;s<NV;s++){ const c=djColor(DJ[s]); bc[3*s]=c[0]; bc[3*s+1]=c[1]; bc[3*s+2]=c[2]; }
+  base.geometry.attributes.color.needsUpdate=true;
+  if(baseMat.vertexColors!==S.dj){ baseMat.vertexColors=S.dj; baseMat.needsUpdate=true; }
+  baseMat.color.set(S.dj?'#ffffff':css('--fill')); baseMat.opacity=S.dj?0.95:0.55;
+  base.geometry.attributes.position.needsUpdate=true; base.geometry.computeBoundingSphere();
+  const op=outline.geometry.attributes.position.array; let q=0;
+  const put=s=>{op[q++]=XS[s];op[q++]=YS[s];op[q++]=0.001;};
+  for(let i=0;i<NSEG;i++) put(sid(i,0));
+  for(let j=0;j<NSEG;j++) put(sid(NSEG,j));
+  for(let i=NSEG;i>0;i--) put(sid(i,NSEG));
+  for(let j=NSEG;j>0;j--) put(sid(0,j));
+  outline.geometry.attributes.position.needsUpdate=true; outline.geometry.computeBoundingSphere();
+
+  nodes.forEach((nd,i)=>{
+    const [x,y]=S.xy[i], u=S.u[i];
+    nd.sphere.position.set(x,y,u);
+    nd.sphere.material = i===k ? selMat : nodeMat;
+    nd.sphere.scale.setScalar(i===k?1.35:1);
+    nd.dot.position.set(x,y,0);
+    const a=nd.stem.geometry.attributes.position.array; a[0]=x;a[1]=y;a[2]=0;a[3]=x;a[4]=y;a[5]=u;
+    nd.stem.geometry.attributes.position.needsUpdate=true; nd.stem.computeLineDistances();
+    nd.label.classList.toggle('sel',i===k);
+  });
+  $('#warn').style.display = hasBadJ ? 'block' : 'none';
+  requestRender();
+}
+
+function applyTheme(){
+  const ink=new THREE.Color(css('--ink')), muted=new THREE.Color(css('--muted'));
+  matSumL.color.copy(ink); matConL.color.set(css('--contrib')); matShpL.color.set(css('--shape'));
+  matCon.color.set(css('--contrib')); matShp.color.set(css('--shape'));
+  baseMat.color.set(S.dj?'#ffffff':css('--fill')); outlineMat.color.copy(ink);
+  nodeMat.color.copy(ink); selMat.color.set(css('--sel')); dotMat.color.copy(muted); stemMat.color.copy(muted);
+  const gc=new THREE.Color(css('--grid'));
+  grid.material.color=new THREE.Color(0xffffff); if(grid.material.vertexColors){ const c=grid.geometry.attributes.color; for(let i=0;i<c.count;i++) c.setXYZ(i,gc.r,gc.g,gc.b); c.needsUpdate=true; }
+  requestRender(); drawGeo();
+}
+
+let raf=0;
+function requestRender(){ if(!raf) raf=requestAnimationFrame(render); }
+const tmpV=new THREE.Vector3();
+function render(){
+  raf=0; placeCam(); renderer.render(scene,camera);
+  const w=view.clientWidth,h=view.clientHeight;
+  nodes.forEach((nd,i)=>{
+    tmpV.set(S.xy[i][0],S.xy[i][1],S.u[i]).project(camera);
+    nd.label.style.left=((tmpV.x+1)/2*w)+'px'; nd.label.style.top=((1-tmpV.y)/2*h)+'px';
+  });
+}
+function resize(){
+  const w=view.clientWidth,h=view.clientHeight; if(!w||!h) return;
+  renderer.setSize(w,h); camera.aspect=w/h; camera.updateProjectionMatrix(); requestRender();
+}
+new ResizeObserver(resize).observe(view);
+
+/* ---------- 3D interaction ---------- */
+const ray=new THREE.Raycaster(), ndc=new THREE.Vector2(), hit=new THREE.Vector3();
+const ptrs=new Map(); let mode=null, drag=null, last=null, pinch0=0, r0=0;
+function localXY(e){ const r=view.getBoundingClientRect(); return [e.clientX-r.left,e.clientY-r.top]; }
+function pickNode(px,py,touch){
+  const w=view.clientWidth,h=view.clientHeight; let best=-1,bd=touch?32:22;
+  for(let i=0;i<nn();i++){
+    tmpV.set(S.xy[i][0],S.xy[i][1],S.u[i]).project(camera);
+    const d=Math.hypot((tmpV.x+1)/2*w-px,(1-tmpV.y)/2*h-py);
+    if(d<bd){bd=d;best=i;}
+  }
+  return best;
+}
+function rayAt(px,py){ ndc.set(px/view.clientWidth*2-1, -(py/view.clientHeight)*2+1); ray.setFromCamera(ndc,camera); }
+function snapU(v){ v=Math.max(-1.5,Math.min(2,v)); return S.snap? Math.round(v*10)/10 : v; }
+const tip=$('#tip');
+function showTip(px,py){ tip.style.display='block'; tip.innerHTML=`<span class="m">u<sub>${S.sel+1}</sub></span> = ${S.u[S.sel].toFixed(2)}`; tip.style.left=(px+14)+'px'; tip.style.top=(py-30)+'px'; }
+
+view.addEventListener('pointerdown',e=>{
+  view.setPointerCapture(e.pointerId);
+  const [px,py]=localXY(e); ptrs.set(e.pointerId,[px,py]);
+  if(ptrs.size===2){ mode='pinch'; const [a,b]=[...ptrs.values()]; pinch0=Math.hypot(a[0]-b[0],a[1]-b[1]); r0=orbit.r; drag=null; tip.style.display='none'; return; }
+  const i=pickNode(px,py,e.pointerType==='touch');
+  if(i>=0){
+    S.sel=i; mode='drag';
+    const p=new THREE.Vector3(S.xy[i][0],S.xy[i][1],S.u[i]);
+    const cd=camera.position.clone().sub(p), hn=new THREE.Vector3(cd.x,cd.y,0);
+    if(hn.length()/cd.length()>0.15){
+      const plane=new THREE.Plane().setFromNormalAndCoplanarPoint(hn.normalize(),p);
+      rayAt(px,py); ray.ray.intersectPlane(plane,hit);
+      drag={plane, off:S.u[i]-hit.z, u0:S.u[i], py0:py};
+    } else drag={plane:null,u0:S.u[i],py0:py};
+    view.style.cursor='ns-resize'; syncUI(); updateScene(); showTip(px,py);
+  } else { mode='orbit'; view.style.cursor='grabbing'; }
+  last=[px,py];
+});
+view.addEventListener('pointermove',e=>{
+  const [px,py]=localXY(e);
+  if(ptrs.has(e.pointerId)) ptrs.set(e.pointerId,[px,py]);
+  if(mode==='pinch' && ptrs.size===2){
+    const [a,b]=[...ptrs.values()]; const d=Math.hypot(a[0]-b[0],a[1]-b[1]);
+    if(pinch0>0){ orbit.r=Math.max(3,Math.min(16,r0*pinch0/d)); requestRender(); } return;
+  }
+  if(mode==='drag'){
+    let u;
+    if(drag.plane){ rayAt(px,py); if(ray.ray.intersectPlane(drag.plane,hit)) u=hit.z+drag.off; else return; }
+    else u=drag.u0-(py-drag.py0)*0.01;
+    S.u[S.sel]=snapU(u); updateScene(); syncValues(); showTip(px,py);
+  } else if(mode==='orbit'){
+    orbit.theta-=(px-last[0])*0.008;
+    orbit.phi=Math.max(0.05,Math.min(1.75,orbit.phi-(py-last[1])*0.008));
+    requestRender();
+  } else if(e.pointerType==='mouse'){
+    view.style.cursor = pickNode(px,py,false)>=0 ? 'ns-resize' : 'grab';
+  }
+  last=[px,py];
+});
+function endPtr(e){
+  ptrs.delete(e.pointerId);
+  if(ptrs.size===0){ mode=null; drag=null; tip.style.display='none'; view.style.cursor='grab'; }
+  else if(mode==='pinch'){ mode='orbit'; last=[...ptrs.values()][0]; }
+}
+view.addEventListener('pointerup',endPtr); view.addEventListener('pointercancel',endPtr);
+view.addEventListener('wheel',e=>{ e.preventDefault(); orbit.r=Math.max(3,Math.min(16,orbit.r*Math.exp(e.deltaY*0.001))); requestRender(); },{passive:false});
+view.addEventListener('keydown',e=>{
+  if(e.key==='ArrowUp'||e.key==='ArrowDown'){ e.preventDefault(); S.u[S.sel]=snapU(S.u[S.sel]+(e.key==='ArrowUp'?0.05:-0.05)); updateScene(); syncValues(); }
+  if(e.key==='ArrowLeft'||e.key==='ArrowRight'){ e.preventDefault(); S.sel=(S.sel+(e.key==='ArrowRight'?1:nn()-1))%nn(); syncUI(); updateScene(); }
+});
+
+/* ---------- 2D geometry panel ---------- */
+const geo=$('#geo'), gx=geo.getContext('2d'); const RANGE=1.9;
+let gdrag=-1;
+function gsize(){ const r=geo.getBoundingClientRect(); const d=Math.min(window.devicePixelRatio||1,2); geo.width=Math.round(r.width*d); geo.height=Math.round(r.height*d); return d; }
+let gdpr=1;
+const toPx=(x,y)=>{ const W=geo.width; return [(x+RANGE)/(2*RANGE)*W, (RANGE-y)/(2*RANGE)*W]; };
+const toW=(px,py)=>{ const W=geo.width; return [px/W*2*RANGE-RANGE, RANGE-py/W*2*RANGE]; };
+function drawGeo(){
+  if(!geo.width) return;
+  const W=geo.width, g=gx; g.clearRect(0,0,W,W);
+  const ink=css('--ink'), muted=css('--muted'), line=css('--line'), sel=css('--sel'), fill=css('--fill'), bad=css('--bad');
+  // fill with bad cells
+  const M=S.dj?48:24;
+  for(let j=0;j<M;j++) for(let i=0;i<M;i++){
+    const x0=-1+2*i/M,x1=-1+2*(i+1)/M,y0=-1+2*j/M,y1=-1+2*(j+1)/M;
+    const dj=detJ((x0+x1)/2,(y0+y1)/2);
+    const pts=[[x0,y0],[x1,y0],[x1,y1],[x0,y1]].map(p=>toPx(...mapXY(p[0],p[1])));
+    const cf = S.dj ? rgb(djColor(dj)) : (dj<=0 ? bad : fill);
+    g.fillStyle = cf; g.globalAlpha = (!S.dj && dj<=0) ? 0.55 : 1;
+    g.beginPath(); pts.forEach((p,k)=>k?g.lineTo(p[0],p[1]):g.moveTo(p[0],p[1])); g.closePath(); g.fill();
+    g.strokeStyle=cf; g.lineWidth=0.8*gdpr; g.stroke();
+  }
+  g.globalAlpha=1;
+  // iso lines
+  g.strokeStyle=muted; g.globalAlpha=0.5; g.lineWidth=1*gdpr;
+  for(let l=1;l<6;l++){
+    const c=-1+2*l/6;
+    g.beginPath(); for(let t=0;t<=40;t++){ const p=toPx(...mapXY(-1+2*t/40,c)); t?g.lineTo(p[0],p[1]):g.moveTo(p[0],p[1]); } g.stroke();
+    g.beginPath(); for(let t=0;t<=40;t++){ const p=toPx(...mapXY(c,-1+2*t/40)); t?g.lineTo(p[0],p[1]):g.moveTo(p[0],p[1]); } g.stroke();
+  }
+  g.globalAlpha=1;
+  // boundary
+  g.strokeStyle=ink; g.lineWidth=2*gdpr; g.beginPath();
+  const edge=[[-1,-1,1,-1],[1,-1,1,1],[1,1,-1,1],[-1,1,-1,-1]]; let first=true;
+  edge.forEach(([x0,y0,x1,y1])=>{ for(let t=0;t<=40;t++){ const s=t/40; const p=toPx(...mapXY(x0+(x1-x0)*s,y0+(y1-y0)*s)); first?(g.moveTo(p[0],p[1]),first=false):g.lineTo(p[0],p[1]); } });
+  g.closePath(); g.stroke();
+  // physical x-y axes with ticks at -1, 1
+  {
+    const d=gdpr, ax=muted; g.strokeStyle=ax; g.fillStyle=ax; g.lineWidth=1.2*d;
+    let a=toPx(-RANGE+0.08,0), b=toPx(RANGE-0.06,0); arrow(g,a[0],a[1],b[0],b[1],8*d);
+    a=toPx(0,-RANGE+0.08); b=toPx(0,RANGE-0.06); arrow(g,a[0],a[1],b[0],b[1],8*d);
+    g.font=`${11*d}px ${css('--sans')}`; g.textAlign='center'; g.textBaseline='middle';
+    [-1,1].forEach(v=>{
+      let p=toPx(v,0); g.strokeStyle=ax; g.lineWidth=1.2*d; g.beginPath(); g.moveTo(p[0],p[1]-4*d); g.lineTo(p[0],p[1]+4*d); g.stroke();
+      htext(g,v<0?'−1':'1',p[0],p[1]+12*d,ax,d);
+      p=toPx(0,v); g.strokeStyle=ax; g.lineWidth=1.2*d; g.beginPath(); g.moveTo(p[0]-4*d,p[1]); g.lineTo(p[0]+4*d,p[1]); g.stroke();
+      htext(g,v<0?'−1':'1',p[0]-13*d,p[1],ax,d);
+    });
+    g.font=`italic ${15*d}px ${css('--math')}`;
+    let p=toPx(RANGE-0.1,0); htext(g,'x',p[0],p[1]-12*d,ax,d);
+    p=toPx(0,RANGE-0.1); htext(g,'y',p[0]+12*d,p[1],ax,d);
+  }
+  // mapped natural axes (xi along eta=0, eta along xi=0) with the +-1 points
+  {
+    const d=gdpr, ink2=ink; g.strokeStyle=ink2; g.fillStyle=ink2; g.lineWidth=2*d;
+    const curve=(f)=>{ g.beginPath(); for(let t=0;t<=40;t++){ const q=toPx(...f(-1+2*t/40)); t?g.lineTo(q[0],q[1]):g.moveTo(q[0],q[1]); } g.stroke(); };
+    curve(t=>mapXY(t,0)); curve(t=>mapXY(0,t));
+    const tipA=(f)=>{ const e=toPx(...f(1)), q=toPx(...f(0.9)); g.beginPath(); const a=Math.atan2(e[1]-q[1],e[0]-q[0]), sz=9*d; g.moveTo(e[0],e[1]); g.lineTo(e[0]-sz*Math.cos(a-0.4),e[1]-sz*Math.sin(a-0.4)); g.lineTo(e[0]-sz*Math.cos(a+0.4),e[1]-sz*Math.sin(a+0.4)); g.closePath(); g.fill(); };
+    tipA(t=>mapXY(t,0)); tipA(t=>mapXY(0,t));
+    g.font=`italic ${12*d}px ${css('--math')}`; g.textAlign='center'; g.textBaseline='middle';
+    const c0=toPx(...mapXY(0,0));
+    [[1,0,'ξ = 1'],[-1,0,'ξ = −1'],[0,1,'η = 1'],[0,-1,'η = −1']].forEach(([xi,eta,t])=>{
+      const q=toPx(...mapXY(xi,eta)); g.beginPath(); g.arc(q[0],q[1],3.5*d,0,Math.PI*2); g.fillStyle=css('--panel'); g.fill(); g.strokeStyle=ink2; g.lineWidth=1.5*d; g.stroke();
+      const dx=q[0]-c0[0], dy=q[1]-c0[1], n=Math.hypot(dx,dy)||1;
+      htext(g,t,q[0]+dx/n*24*d,q[1]+dy/n*14*d,ink2,d);
+    });
+  }
+  // hovered natural point
+  if(S.hover){
+    const [h0,h1]=S.hover; g.strokeStyle=css('--sel'); g.lineWidth=1.8*gdpr;
+    g.beginPath(); for(let t=0;t<=40;t++){ const p=toPx(...mapXY(-1+2*t/40,h1)); t?g.lineTo(p[0],p[1]):g.moveTo(p[0],p[1]); } g.stroke();
+    g.setLineDash([4*gdpr,3*gdpr]);
+    g.beginPath(); for(let t=0;t<=40;t++){ const p=toPx(...mapXY(h0,-1+2*t/40)); t?g.lineTo(p[0],p[1]):g.moveTo(p[0],p[1]); } g.stroke();
+    g.setLineDash([]);
+    const [hx,hy]=toPx(...mapXY(h0,h1)); g.beginPath(); g.arc(hx,hy,5*gdpr,0,Math.PI*2); g.fillStyle=css('--panel'); g.fill(); g.stroke();
+  }
+  // nodes
+  g.font=`italic ${14*gdpr}px ${css('--math')}`; g.textBaseline='middle';
+  for(let i=0;i<nn();i++){
+    const [px,py]=toPx(S.xy[i][0],S.xy[i][1]); const isSel=i===S.sel;
+    g.beginPath(); g.arc(px,py,(isSel?7:5.5)*gdpr,0,Math.PI*2);
+    g.fillStyle=isSel?sel:ink; g.fill();
+    g.fillStyle=isSel?sel:ink;
+    const R=refPts()[i]; const ox=(R[0]===0?0.6:R[0])*12*gdpr, oy=-(R[1]===0?0.6:R[1])*12*gdpr;
+    g.textAlign= ox>=0?'left':'right';
+    g.fillText(String(i+1), px+ox, py+oy);
+  }
+  drawRef();
+}
+/* ---------- parent element in natural coordinates ---------- */
+const refc=$('#ref'), rx=refc.getContext('2d'); let rdpr=1; const RR=1.62;
+const rToPx=(xi,eta)=>{ const W=refc.width; return [(xi+RR)/(2*RR)*W,(RR-eta)/(2*RR)*W]; };
+const rToW=(px,py)=>{ const W=refc.width; return [px/W*2*RR-RR, RR-py/W*2*RR]; };
+function drawRef(){
+  if(!refc.width) return;
+  const fillC=css('--fill'), badC=css('--bad');
+  const W=refc.width, g=rx; g.clearRect(0,0,W,W);
+  const ink=css('--ink'), muted=css('--muted'), line=css('--line');
+  const M=60, [x0p,y0p]=rToPx(-1,1), [x1p,y1p]=rToPx(1,-1), cw=(x1p-x0p)/M;
+  for(let j=0;j<M;j++) for(let i=0;i<M;i++){
+    const xi=-1+2*(i+0.5)/M, eta=1-2*(j+0.5)/M;
+    const dj=detJ(xi,eta); g.fillStyle = S.dj ? rgb(djColor(dj)) : (dj<=0 ? badC : fillC); g.globalAlpha = (!S.dj && dj<=0) ? 0.55 : 1; g.fillRect(x0p+i*cw-0.3, y0p+j*cw-0.3, cw+0.6, cw+0.6);
+  }
+  g.globalAlpha=1; g.strokeStyle=ink; g.globalAlpha=0.35; g.lineWidth=1*rdpr;
+  for(let l=1;l<6;l++){ const c=-1+2*l/6; let a=rToPx(-1,c),b=rToPx(1,c); g.beginPath(); g.moveTo(...a); g.lineTo(...b); g.stroke(); a=rToPx(c,-1); b=rToPx(c,1); g.beginPath(); g.moveTo(...a); g.lineTo(...b); g.stroke(); }
+  g.globalAlpha=1; g.lineWidth=2*rdpr; g.strokeRect(x0p,y0p,x1p-x0p,y1p-y0p);
+  // natural xi-eta axes through the origin, ticks at -1, 0, 1
+  {
+    const d=rdpr; g.strokeStyle=ink; g.fillStyle=ink; g.lineWidth=1.6*d;
+    let a=rToPx(-1.3,0), b=rToPx(1.42,0); arrow(g,a[0],a[1],b[0],b[1],9*d);
+    a=rToPx(0,-1.3); b=rToPx(0,1.42); arrow(g,a[0],a[1],b[0],b[1],9*d);
+    g.font=`${11*d}px ${css('--sans')}`; g.textAlign='center'; g.textBaseline='middle';
+    [-1,1].forEach(v=>{
+      const t=v<0?'−1':'1';
+      let p=rToPx(v,0); g.strokeStyle=ink; g.lineWidth=1.6*d; g.beginPath(); g.moveTo(p[0],p[1]-5*d); g.lineTo(p[0],p[1]+5*d); g.stroke();
+      htext(g,t,p[0]+(v<0?11:-9)*d,p[1]+11*d,ink,d);
+      p=rToPx(0,v); g.beginPath(); g.moveTo(p[0]-5*d,p[1]); g.lineTo(p[0]+5*d,p[1]); g.stroke();
+      htext(g,t,p[0]-13*d,p[1]+(v<0?-9:9)*d,ink,d);
+    });
+    htext(g,'0',rToPx(0,0)[0]-9*d,rToPx(0,0)[1]+10*d,ink,d);
+    g.font=`italic ${16*d}px ${css('--math')}`;
+    let p=rToPx(1.42,0); htext(g,'ξ',p[0]-2*d,p[1]-13*d,ink,d);
+    p=rToPx(0,1.42); htext(g,'η',p[0]+13*d,p[1]+2*d,ink,d);
+    // corner coordinates
+    g.font=`${11*d}px ${css('--sans')}`;
+    [[-1,-1,'(−1, −1)'],[1,-1,'(1, −1)'],[1,1,'(1, 1)'],[-1,1,'(−1, 1)']].forEach(([xi,eta,t])=>{
+      const q=rToPx(xi*1.17,eta*1.12); g.fillStyle=muted; g.fillText(t,q[0],q[1]);
+    });
+  }
+  // nodes
+  g.font=`italic ${13*rdpr}px ${css('--math')}`;
+  refPts().forEach((p,i)=>{ const [a,b]=rToPx(p[0],p[1]); g.beginPath(); g.arc(a,b,(i===S.sel?5.5:4)*rdpr,0,Math.PI*2); g.fillStyle=i===S.sel?css('--sel'):ink; g.fill(); g.strokeStyle=css('--panel'); g.lineWidth=1.5*rdpr; g.stroke(); });
+  if(S.hover){
+    const [h0,h1]=S.hover, sel=css('--sel'); g.strokeStyle=sel; g.lineWidth=1.8*rdpr;
+    let a=rToPx(-1,h1), b=rToPx(1,h1); g.beginPath(); g.moveTo(...a); g.lineTo(...b); g.stroke();
+    g.setLineDash([4*rdpr,3*rdpr]); a=rToPx(h0,-1); b=rToPx(h0,1); g.beginPath(); g.moveTo(...a); g.lineTo(...b); g.stroke(); g.setLineDash([]);
+    const [hx,hy]=rToPx(h0,h1); g.beginPath(); g.arc(hx,hy,5*rdpr,0,Math.PI*2); g.fillStyle=css('--panel'); g.fill(); g.stroke();
+  }
+}
+function refHover(e){
+  const r=refc.getBoundingClientRect();
+  let [xi,eta]=rToW((e.clientX-r.left)*refc.width/r.width,(e.clientY-r.top)*refc.width/r.width);
+  if(Math.abs(xi)>1.02||Math.abs(eta)>1.02){ refLeave(); return; }
+  xi=Math.max(-1,Math.min(1,xi)); eta=Math.max(-1,Math.min(1,eta));
+  S.hover=[xi,eta]; updateReadout(); drawGeo(); updateHover3D();
+}
+function refLeave(){ S.hover=null; updateReadout(); drawGeo(); updateHover3D(); }
+refc.addEventListener('pointermove',refHover); refc.addEventListener('pointerdown',e=>{
+  const r=refc.getBoundingClientRect(), px=(e.clientX-r.left)*refc.width/r.width, py=(e.clientY-r.top)*refc.width/r.width;
+  let best=-1,bd=16*rdpr; refPts().forEach((p,i)=>{ const q=rToPx(p[0],p[1]); const dd=Math.hypot(q[0]-px,q[1]-py); if(dd<bd){bd=dd;best=i;} });
+  if(best>=0){ S.sel=best; syncUI(); updateScene(); }
+  refHover(e);
+}); refc.addEventListener('pointerleave',refLeave);
+new ResizeObserver(()=>{ const r=refc.getBoundingClientRect(); rdpr=Math.min(window.devicePixelRatio||1,2); refc.width=Math.round(r.width*rdpr); refc.height=Math.round(r.height*rdpr); drawRef(); }).observe(refc);
+const f2=v=>(v<0?'−':'')+Math.abs(v).toFixed(2), f3=v=>(v<0?'−':'')+Math.abs(v).toFixed(3);
+function updateReadout(){
+  const el=$('#djRead');
+  if(!S.hover){ el.textContent='Hover over the parent square to see where a point lands on the physical element.'; return; }
+  const [xi,eta]=S.hover, [x,y]=mapXY(xi,eta), d=detJ(xi,eta);
+  el.innerHTML=`(<span class="m">ξ, η</span>) = (${f2(xi)}, ${f2(eta)}) maps to (<span class="m">x, y</span>) = (${f2(x)}, ${f2(y)})<br>det <span class="m">J</span> = ${f3(d)}, which is ${(d/djMean).toFixed(2)} × the average`;
+}
+function updateDJText(){
+  const set=(id,v)=>{$(id).textContent=v;};
+  [['#dj0','#ldj0',0],['#dj1','#ldj1',djMean],['#dj2','#ldj2',2*djMean]].forEach(([a,b,v])=>{ const t=v.toFixed(2); set(a,t); set(b,t); });
+  if(S.type==='Q4'){
+    const J0=detJ(0,0), J1=(detJ(1,0)-detJ(-1,0))/2, J2=(detJ(0,1)-detJ(0,-1))/2;
+    const term=(c,v)=>Math.abs(c)<5e-4?'':` ${c<0?'−':'+'} ${Math.abs(c).toFixed(3)} ${v}`;
+    $('#djFormula').innerHTML=`det J = ${J0.toFixed(3)}${term(J1,'ξ')}${term(J2,'η')}`;
+    $('#djNote').innerHTML='For the bilinear element det <span class="m">J</span> is linear in <span class="m">ξ</span> and <span class="m">η</span>: the <span class="m">ξη</span> terms cancel. It is constant only for parallelograms, including rectangles.';
+  } else {
+    const range=djMax-minDet;
+    $('#djFormula').innerHTML=`det J ranges from ${minDet.toFixed(3)} to ${djMax.toFixed(3)}`;
+    $('#djNote').innerHTML='For the biquadratic element det <span class="m">J</span> is a higher-order polynomial in <span class="m">ξ, η</span>. Curved edges or displaced mid-side nodes make it vary even when the corners form a rectangle.'+(range<1e-6?' Here it is constant.':'');
+  }
+}
+// 3D marker for the hovered natural point
+const hovMat=new THREE.MeshBasicMaterial({color:0xffffff});
+const hovDot=new THREE.Mesh(new THREE.SphereGeometry(0.05,16,10),hovMat); hovDot.visible=false; scene.add(hovDot);
+function updateHover3D(){
+  if(S.hover){ const [x,y]=mapXY(...S.hover); hovDot.position.set(x,y,0.01); hovMat.color.set(css('--sel')); hovDot.visible=true; }
+  else hovDot.visible=false;
+  requestRender();
+}
+function setDJ(on){
+  S.dj=on; $('#djBody').classList.toggle('on',on); $('#legDJ').style.display=on?'block':'none';
+  updateScene(); drawGeo(); updateDJText(); updateHover3D();
+  if(on){ const r=refc.getBoundingClientRect(); rdpr=Math.min(window.devicePixelRatio||1,2); refc.width=Math.round(r.width*rdpr); refc.height=Math.round(r.height*rdpr); drawRef(); }
+}
+$('#cDJ').addEventListener('change',e=>setDJ(e.target.checked));
+function geoPick(px,py){ let best=-1,bd=18*gdpr; for(let i=0;i<nn();i++){ const [x,y]=toPx(S.xy[i][0],S.xy[i][1]); const d=Math.hypot(x-px,y-py); if(d<bd){bd=d;best=i;} } return best; }
+function geoLocal(e){ const r=geo.getBoundingClientRect(); return [(e.clientX-r.left)*geo.width/r.width,(e.clientY-r.top)*geo.width/r.width]; }
+geo.addEventListener('pointerdown',e=>{ const [px,py]=geoLocal(e); const i=geoPick(px,py); if(i<0) return; geo.setPointerCapture(e.pointerId); gdrag=i; S.sel=i; syncUI(); updateScene(); drawGeo(); });
+geo.addEventListener('pointermove',e=>{
+  const [px,py]=geoLocal(e);
+  if(gdrag<0){ geo.style.cursor = geoPick(px,py)>=0 ? 'move':'default'; return; }
+  let [x,y]=toW(px,py); x=Math.max(-RANGE+0.05,Math.min(RANGE-0.05,x)); y=Math.max(-RANGE+0.05,Math.min(RANGE-0.05,y));
+  S.xy[gdrag]=[x,y];
+  if(S.type==='Q9'){ if(gdrag>=4 && S.straight){ S.straight=false; $('#cStraight').checked=false; } if(gdrag<4 && S.straight) straightenMids(); }
+  geometryChanged();
+});
+const gEnd=()=>{gdrag=-1;}; geo.addEventListener('pointerup',gEnd); geo.addEventListener('pointercancel',gEnd);
+new ResizeObserver(()=>{ gdpr=gsize(); drawGeo(); }).observe(geo);
+
+function geometryChanged(){ recomputeSamples(); updateScene(); drawGeo(); syncStatus(); updateDJText(); updateReadout(); updateHover3D(); }
+
+const PRESETS={
+  square:[[-1,-1],[1,-1],[1,1],[-1,1]],
+  trap:[[-1.2,-0.9],[1.2,-0.9],[0.55,0.9],[-0.55,0.9]],
+  para:[[-1.3,-0.8],[0.7,-0.8],[1.3,0.8],[-0.7,0.8]]
+};
+document.querySelectorAll('[data-g]').forEach(b=>b.addEventListener('click',()=>{
+  const k=b.dataset.g; let c;
+  if(k==='rand'){
+    for(let t=0;t<100;t++){ c=REF4.map(p=>[p[0]+(Math.random()-0.5)*0.9,p[1]+(Math.random()-0.5)*0.9]);
+      const save=S.xy, st=S.type; S.xy=c.map(p=>p.slice()); S.type='Q4'; let ok=true;
+      for(let j=0;j<=8&&ok;j++) for(let i=0;i<=8;i++) if(detJ(-1+i/4,-1+j/4)<=0.05){ok=false;break;}
+      S.xy=save; S.type=st; if(ok) break; }
+  } else if(k==='curve'){ c=S.xy.slice(0,4).map(p=>p.slice()); }
+  else c=PRESETS[k];
+  for(let i=0;i<4;i++) S.xy[i]=c[i].slice();
+  if(S.type==='Q9'){
+    straightenMids();
+    if(k==='curve'){ S.xy[5]=[S.xy[5][0]+0.4,S.xy[5][1]]; S.xy[6]=[S.xy[6][0],S.xy[6][1]+0.35]; S.xy[4]=[S.xy[4][0],S.xy[4][1]+0.25]; S.straight=false; }
+    else S.straight=true;
+    $('#cStraight').checked=S.straight;
+  }
+  geometryChanged();
+}));
+$('#cStraight').addEventListener('change',e=>{ S.straight=e.target.checked; if(S.straight){ straightenMids(); geometryChanged(); } });
+
+/* ---------- element switch ---------- */
+function setType(t){
+  if(t===S.type) return;
+  if(t==='Q9'){
+    // keep the current bilinear field and geometry exactly
+    const newU=REF9.map(p=>{ shape('Q4',p[0],p[1],tN); let v=0; for(let i=0;i<4;i++) v+=tN[i]*S.u[i]; return v; });
+    S.xy=REF9.map((p,i)=> i<4 ? S.xy[i] : bilinear(S.xy,p[0],p[1]));
+    S.u=newU; S.straight=true; $('#cStraight').checked=true;
+  } else {
+    S.xy=S.xy.slice(0,4); S.u=S.u.slice(0,4); if(S.sel>3) S.sel=2;
+  }
+  S.type=t; buildNodes(); recomputeSamples(); syncUI(); updateScene(); drawGeo(); updateDJText(); updateReadout(); updateHover3D();
+}
+$('#tQ4').addEventListener('click',()=>setType('Q4'));
+$('#tQ9').addEventListener('click',()=>setType('Q9'));
+
+/* ---------- controls ---------- */
+$('#cSum').addEventListener('change',e=>{S.show.sum=e.target.checked;updateScene();});
+$('#cCon').addEventListener('change',e=>{S.show.contrib=e.target.checked;updateScene();});
+$('#cShp').addEventListener('change',e=>{S.show.shape=e.target.checked;updateScene();});
+$('#cGrd').addEventListener('change',e=>{S.show.grid=e.target.checked;updateScene();});
+$('#cSnap').addEventListener('change',e=>{S.snap=e.target.checked;});
+$('#uSlider').addEventListener('input',e=>{S.u[S.sel]=+e.target.value;updateScene();syncValues();});
+$('#bOne').addEventListener('click',()=>{S.u=S.u.map(()=>1);updateScene();syncValues();});
+$('#bZero').addEventListener('click',()=>{S.u=S.u.map(()=>0);updateScene();syncValues();});
+$('#bIso').addEventListener('click',()=>{S.u=S.u.map((_,i)=>i===S.sel?1:0);updateScene();syncValues();});
+
+function formulaFor(k){
+  const [a,b]=refPts()[k];
+  const sub=`<sub>${k+1}</sub>`;
+  if(S.type==='Q4'){
+    const f=(s,v)=>s<0?`(1 − ${v})`:`(1 + ${v})`;
+    return `N${sub} = ¼ ${f(a,'ξ')}${f(b,'η')}`;
+  }
+  const h=(a!==0)+(b!==0), coef=h===2?'¼ ':h===1?'½ ':'';
+  const f=(s,v)=>s===-1?`${v}(${v} − 1)`:s===1?`${v}(${v} + 1)`:`(1 − ${v}²)`;
+  return `N${sub} = ${coef}${f(a,'ξ')} ${f(b,'η')}`;
+}
+function syncValues(){
+  const n=nn();
+  document.querySelectorAll('.chip').forEach((c,i)=>{ c.querySelector('span').textContent=S.u[i].toFixed(2); });
+  $('#uSlider').value=S.u[S.sel]; $('#uVal').textContent=S.u[S.sel].toFixed(2);
+  syncStatus();
+}
+function syncStatus(){
+  const e=maxPU<1e-15?'< 10⁻¹⁵':maxPU.toExponential(1);
+  $('#puStatus').innerHTML=`Partition of unity: max |Σ N<sub>i</sub> − 1| = ${e}. Field range on element: ${fieldMin.toFixed(2)} to ${fieldMax.toFixed(2)}.`;
+  const js=$('#jStatus');
+  if(hasBadJ){ js.className='status badc'; js.innerHTML=`det J ≤ 0 inside the element (min ${minDet.toFixed(3)}). Move nodes to make it convex again.`; }
+  else { js.className='status ok'; js.innerHTML=`det J > 0 everywhere (min ${minDet.toFixed(3)}), so the mapping is valid.`; }
+}
+function syncUI(){
+  $('#tQ4').setAttribute('aria-pressed',S.type==='Q4'); $('#tQ9').setAttribute('aria-pressed',S.type==='Q9');
+  $('#gCurve').hidden = S.type!=='Q9';
+  $('#straightWrap').style.display = S.type==='Q9' ? 'flex' : 'none';
+  const ch=$('#chips'); ch.innerHTML='';
+  for(let i=0;i<nn();i++){
+    const b=document.createElement('button'); b.className='chip'; b.setAttribute('aria-pressed',i===S.sel);
+    b.innerHTML=`<b>u<sub>${i+1}</sub></b> <span>${S.u[i].toFixed(2)}</span>`;
+    b.addEventListener('click',()=>{S.sel=i;syncUI();updateScene();drawGeo();});
+    ch.appendChild(b);
+  }
+  $('#uLab').innerHTML=`u<sub>${S.sel+1}</sub>`;
+  $('#formula').innerHTML=formulaFor(S.sel);
+  const [a,b]=refPts()[S.sel];
+  const kind = S.type==='Q4' ? 'corner node' : S.sel<4 ? 'corner node' : S.sel<8 ? 'mid-side node' : 'centre (bubble) node';
+  $('#nodeNote').innerHTML=`Node ${S.sel+1}, ${kind} at (ξ, η) = (${a}, ${b}). N<sub>${S.sel+1}</sub> equals 1 here and 0 at every other node.`;
+  syncValues(); drawGeo();
+}
+
+/* ---------- theme ---------- */
+const mq=window.matchMedia('(prefers-color-scheme: dark)');
+mq.addEventListener && mq.addEventListener('change',applyTheme);
+new MutationObserver(applyTheme).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
+
+/* ---------- init ---------- */
+buildNodes(); recomputeSamples(); updateDJText(); applyTheme(); syncUI(); updateScene(); resize();
+if(document.fonts) document.fonts.ready.then(drawGeo);
+})();
+</script>
+</body>
+</html>
